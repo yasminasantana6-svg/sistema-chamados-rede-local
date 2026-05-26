@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema Corporativo de Chamados</title>
+
+<style>
+
+body{
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin:0;
+    padding:20px;
+}
+
+.container{
+    max-width:900px;
+    margin:auto;
+}
+
+h1{
+    text-align:center;
+}
+
+.formulario{
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    box-shadow:0 0 10px rgba(0,0,0,0.1);
+    margin-bottom:20px;
+}
+
+input, textarea{
+    width:100%;
+    padding:10px;
+    margin-top:8px;
+    margin-bottom:15px;
+    border:1px solid #ccc;
+    border-radius:5px;
+    box-sizing:border-box;
+}
+
+button{
+    background:#007bff;
+    color:white;
+    border:none;
+    padding:12px 20px;
+    border-radius:5px;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#0056b3;
+}
+
+.chamados{
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    box-shadow:0 0 10px rgba(0,0,0,0.1);
+}
+
+.card{
+    border-left:5px solid #007bff;
+    background:#fafafa;
+    margin-bottom:10px;
+    padding:10px;
+    border-radius:5px;
+}
+
+.exemplos{
+    background:#fff3cd;
+    padding:15px;
+    border-radius:8px;
+    margin-bottom:20px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Sistema Corporativo de Chamados</h1>
+
+<div class="exemplos">
+<h3>Exemplos para Teste</h3>
+
+<p><b>Nome:</b> João Silva</p>
+<p><b>Setor:</b> Ensino</p>
+<p><b>Solicitação:</b> Node.js não instalado na máquina</p>
+
+<hr>
+
+<p><b>Nome:</b> Maria Souza</p>
+<p><b>Setor:</b> RH</p>
+<p><b>Solicitação:</b> Impressora não imprime documentos</p>
+
+</div>
+
+<div class="formulario">
+
+<h2>Cadastrar Chamado</h2>
+
+<label>Nome do Colaborador</label>
+<input
+type="text"
+id="nome"
+placeholder="Digite o nome">
+
+<label>Setor</label>
+<input
+type="text"
+id="setor"
+placeholder="Digite o setor">
+
+<label>Solicitação / Problema</label>
+<textarea
+id="solicitacao"
+rows="4"
+placeholder="Descreva o problema"></textarea>
+
+<button onclick="cadastrar()">
+Cadastrar Chamado
+</button>
+
+</div>
+
+<div class="chamados">
+
+<h2>Chamados Registrados</h2>
+
+<div id="listaChamados">
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+// COLOQUE O IP DO COMPUTADOR QUE ESTÁ RODANDO O NODE.JS
+
+const API = "http://172.26.88.41:3000";
+
+async function cadastrar(){
+
+    const nome =
+    document.getElementById("nome").value;
+
+    const setor =
+    document.getElementById("setor").value;
+
+    const solicitacao =
+    document.getElementById("solicitacao").value;
+
+    if(
+        nome === "" ||
+        setor === "" ||
+        solicitacao === ""
+    ){
+        alert("Preencha todos os campos!");
+        return;
+    }
+
+    try{
+
+        const resposta = await fetch(
+            `${API}/chamados`,
+            {
+                method:"POST",
+
+                headers:{
+                    "Content-Type":
+                    "application/json"
+                },
+
+                body:JSON.stringify({
+                    nome,
+                    setor,
+                    solicitacao
+                })
+            }
+        );
+
+        const dados =
+        await resposta.json();
+
+        alert(dados.mensagem);
+
+        document.getElementById("nome").value = "";
+        document.getElementById("setor").value = "";
+        document.getElementById("solicitacao").value = "";
+
+        carregarChamados();
+
+    }
+    catch(erro){
+
+        console.error(erro);
+
+        alert(
+            "Erro ao cadastrar chamado."
+        );
+    }
+}
+
+async function carregarChamados(){
+
+    try{
+
+        const resposta =
+        await fetch(
+            `${API}/chamados`
+        );
+
+        const chamados =
+        await resposta.json();
+
+        const lista =
+        document.getElementById(
+            "listaChamados"
+        );
+
+        lista.innerHTML = "";
+
+        chamados.forEach(chamado => {
+
+            lista.innerHTML += `
+            <div class="card">
+
+                <h3>
+                Chamado #${chamado.id}
+                </h3>
+
+                <p>
+                <b>Nome:</b>
+                ${chamado.nome}
+                </p>
+
+                <p>
+                <b>Setor:</b>
+                ${chamado.setor}
+                </p>
+
+                <p>
+                <b>Solicitação:</b>
+                ${chamado.solicitacao}
+                </p>
+
+            </div>
+            `;
+        });
+
+    }
+    catch(erro){
+
+        console.error(erro);
+
+        document.getElementById(
+            "listaChamados"
+        ).innerHTML =
+        "<p>Erro ao carregar chamados.</p>";
+    }
+}
+
+// Carrega os chamados ao abrir a página
+carregarChamados();
+
+// Atualiza a lista a cada 5 segundos
+setInterval(
+    carregarChamados,
+    5000
+);
+
+</script>
+
+</body>
+</html>
